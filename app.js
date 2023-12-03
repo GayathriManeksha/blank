@@ -10,6 +10,8 @@ app.use(cors());
 //since import is used add .js extension as well
 const AuthRouter = require('./routes/user');
 const WorkRouter = require('./routes/emp');
+const AppointmentRouter = require('./routes/appointment');
+const RequestRouter = require('./routes/request');
 
 
 // Middleware to verify JWT token
@@ -31,9 +33,10 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-app.use("/user", AuthRouter);
+app.use("/user",AuthRouter);
 app.use("/emp", WorkRouter);
-
+app.use("/request", RequestRouter);
+app.use("/appointment", AppointmentRouter);
 
 
 
