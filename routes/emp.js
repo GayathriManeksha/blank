@@ -35,9 +35,10 @@ router.post('/login', async (req, res) => {
 router.get('/requests/:workerId', async (req, res) => {
     try {
         const workerId = req.params.workerId;
+        // const workerId = '656c985735a6de4ab5426784';
 
         // Find all requests with the given workerId
-        const requests = await Request.find({ workerId:workerId,status:'pending' });
+        const requests = await Request.find({ workerId , status : 'Pending'});
 
         // Extract user IDs from the requests
         console.log('Requests:', requests);

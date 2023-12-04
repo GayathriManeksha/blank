@@ -1,19 +1,22 @@
+
+
 const mongoose = require('mongoose');
 
 const workerSchema = new mongoose.Schema({
-  empid:{
+  empid: {
     type: String,
     unique: true,
     required: true,
-},
-  
+  },
   username: String,
- 
   email: { type: String, unique: true },
-  password: String, // Hash and salt passwords
+  password: String,
   phone: String,
-  address: String,
-  profession: String, // e.g., plumber, beautician
+  address: {
+    latitude: { type: Number, default: null },
+    longitude: { type: Number, default: null },
+  },
+  profession: String,
   // Other relevant fields
 });
 
