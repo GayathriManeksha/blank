@@ -64,7 +64,7 @@ router.post('/savelocation', async (req, res) => {
     console.log("save-location");
     const { userId, location } = req.body;
     console.log({ userId, location });
-    const user = await User.findById(userId);
+    const user = await User.findOne({ username: userId });
     console.log(user)
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
