@@ -95,7 +95,8 @@ router.post('/listworkers', async (req, res) => {
         const { profession, userId } = req.body;
 
         // Fetch the user's location
-        const user = await User.findById(userId);
+        const user = await User.findOne({ username: userId });
+        if (!user) { return res.status(401).json({ error: 'No such user' }); }
         const userLocation = user.location;
 
         // Fetch all workers from the Worker model
