@@ -36,7 +36,7 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     // Find the user by username
-    const user = await User.findOne({ username});
+    const user = await User.findOne({ username });
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -58,5 +58,27 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+router.post('/savelocation', async (req, res) => {
+  try {
+    console.log("save-location");
+    const { userId, location } = req.body;
+    console.log({ userId, location });
+    const user = await User.findById(userId);
+    console.log(user)
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update the request status to 'assigned'
+    user.location = location;
+    await user.save();
+    return res.status(200).json({ message: "saved location" })
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
 
 module.exports = router;

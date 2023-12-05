@@ -42,7 +42,9 @@ app.use("/appointment", AppointmentRouter);
 
 console.log(process.env.url)
 mongoose.connect(process.env.MONGODB_URI);
-
+mongoose.connection.on('connected', () => {
+    console.log('Mongoose connected to the database');
+});
 
 app.listen(3007, () => {
     console.log('Server started on port 3007');
