@@ -1,0 +1,7 @@
+SO the user can use some "Chat to Make a Deal" option to Text
+On clicking that option a CreateRoom signal is send , which creates a room 
+The createRoom creates a room in the socket with id of the Chat Model ( This model records all the messages in the room)
+Both parties can send messages in the room , or create a "Book" option
+which on clicking creates a different card (Kind of like a payment card in gpay maybe)
+The worker can either accept or decline the offer (time limit to do either)
+If accepted an appointment is created

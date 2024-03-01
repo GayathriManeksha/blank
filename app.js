@@ -7,6 +7,26 @@ app.use(express.json());
 const cors = require("cors");
 
 app.use(cors());
+app.use(express.urlencoded({ extended: true }));
+//👇🏻 New imports
+const http = require("http").Server(app);
+
+const socketIO = require('socket.io')(http);
+
+//👇🏻 Add this before the app.get() block
+socketIO.on('connection', (socket) => {
+    console.log(`⚡: ${socket.id} user just connected!`);
+
+    socket.on('disconnect', () => {
+        socket.disconnect()
+        console.log('🔥: A user disconnected');
+    });
+});
+
+setInterval(() => {
+    socketIO.sockets.emit('time-msg', { time: new Date().toISOString() });
+}, 1000);
+
 //since import is used add .js extension as well
 const AuthRouter = require('./routes/user');
 const WorkRouter = require('./routes/emp');
@@ -39,14 +59,13 @@ app.use("/request", RequestRouter);
 app.use("/appointment", AppointmentRouter);
 
 
-
 console.log(process.env.url)
 mongoose.connect(process.env.MONGODB_URI);
 mongoose.connection.on('connected', () => {
     console.log('Mongoose connected to the database');
 });
 
-app.listen(3007, () => {
+http.listen(3007, () => {
     console.log('Server started on port 3007');
 }
 );
