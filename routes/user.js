@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Chat = require('../models/Chat');
 
 const router = express.Router();
 
@@ -81,5 +82,77 @@ router.post('/savelocation', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 })
+
+router.post('/chat', async (req, res) => {
+  try {
+    const { userId, workerId } = req.body;
+
+    // Check if a chat room already exists for the given userId and workerId
+    let chat = await Chat.findOne({ userId, workerId });
+
+    // If a chat room doesn't exist, create a new one
+    if (!chat) {
+      chat = new Chat({ userId, workerId, messages: [] });
+      await chat.save();
+    }
+
+    res.json({ chatId: chat._id, messages: chat.messages });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// API endpoint to add a message to a chat room
+router.post('/chat/message', async (req, res) => {
+  try {
+    const { userId, workerId, content } = req.body;
+
+    // Find the chat room based on userId and workerId
+    let chat = await Chat.findOne({ userId, workerId }).populate('workerId', 'username');
+
+    // If chat room not found, return an error
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat room not found' });
+    }
+
+    // Add the new message to the chat room
+    chat.messages.push({ sender: { role: 'user' }, content });
+    await chat.save();
+
+    res.json({ chatId: chat._id, workerName: chat.workerId.username, messages: chat.messages });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/chat/workers', async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    // Find all chat rooms where the provided userId exists
+    const chats = await Chat.find({ userId });
+
+    // Extract unique workerIds from the found chat rooms
+    const workerIds = chats.reduce((acc, chat) => {
+      if (chat.workerId && !acc.includes(chat.workerId.toString())) {
+        acc.push(chat.workerId.toString());
+      }
+      return acc;
+    }, []);
+
+    // Lookup worker names for each worker ID
+    const workersWithNames = await Promise.all(workerIds.map(async (workerId) => {
+      const worker = await Worker.findById(workerId);
+      return { id: workerId, name: worker ? worker.username : 'Unknown' }; // Assuming username is the worker's name field
+    }));
+
+    res.json({ workers: workersWithNames });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 module.exports = router;

@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
+    id:String,
     sender: {
-        role: { type: String, enum: ['user', 'worker'], required: true },
-        // userOrWorker: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'sender.role' },
+        role: { type: String, enum: ['user', 'worker'], required: true }
     },
-    content: { type: String, required: true },
-    timestamp: { type: Date, default: Date.now },
+    contentType: { type: String, enum: ['text', 'bid'], required: true },
+    content: {
+        text: { type: String }, // For text messages
+        bidAmount: { type: Number }, // For bid messages
+    },
+    timestamp: { type: String, default: Date.now },
     // Other relevant fields
 });
 

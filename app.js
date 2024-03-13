@@ -5,6 +5,7 @@ const app = express();
 require('dotenv').config()
 app.use(express.json());
 const cors = require("cors");
+const Chat = require('./models/Chat');
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
@@ -17,6 +18,40 @@ const socketIO = require('socket.io')(http);
 socketIO.on('connection', (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);
 
+    socket.on("createRoom", (roomName) => {
+        console.log("createRoom request", roomName)
+        socket.join(roomName);
+        const newMessage = {
+            text: "Hey"
+        };
+        // socket.emit("room",newMessage)
+        
+        // socket.to(roomName).emit("roomMessage", newMessage); //only those clients joined in this room receives this message maybe
+    });
+    socket.on("message", async (data) => {
+        console.log("message", data)
+        const { room_id, newMessage } = data;
+        try {
+            // Find the chat room corresponding to the room_id
+            let chat = await Chat.findById(room_id);
+
+            // If the chat room doesn't exist, you may handle this case based on your application logic.
+            if (!chat) {
+                console.log("Chat room not found");
+                return;
+            }
+
+            // Append the new message to the messages array
+            chat.messages.push(newMessage);
+
+            // Save the updated chat room
+            await chat.save();
+
+            console.log("Message saved in chat room:", newMessage);
+        } catch (error) {
+            console.error("Error saving message:", error);
+        }
+    })
     socket.on('disconnect', () => {
         socket.disconnect()
         console.log('🔥: A user disconnected');
@@ -53,7 +88,7 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-app.use("/user",AuthRouter);
+app.use("/user", AuthRouter);
 app.use("/emp", WorkRouter);
 app.use("/request", RequestRouter);
 app.use("/appointment", AppointmentRouter);

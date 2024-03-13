@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Worker = require('../models/worker');
 const Request = require('../models/request');
 const User = require('../models/User');
+const Chat = require('../models/Chat');
 const router = express.Router();
 
 const calculateDistance = (userLocation, workerLocation) => {
@@ -144,5 +145,53 @@ router.post('/savelocation', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 })
+
+router.post('/chat', async (req, res) => {
+    try {
+        const { userId, workerId } = req.body;
+
+        // Check if a chat room already exists for the given userId and workerId
+        let chat = await Chat.findOne({ userId, workerId });
+
+        // If a chat room doesn't exist, create a new one
+        if (!chat) {
+            chat = new Chat({ userId, workerId, messages: [] });
+            await chat.save();
+        }
+
+        res.json({ chatId: chat._id, messages: chat.messages });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.get('/chats/users', async (req, res) => {
+    try {
+        const { workerId } = req.body;
+
+        // Find all chat rooms associated with the specified worker ID
+        const chats = await Chat.find({ workerId });
+
+        // Extract unique user IDs from the found chat rooms
+        const userIds = chats.reduce((acc, chat) => {
+            if (!acc.includes(chat.userId.toString())) {
+                acc.push(chat.userId.toString());
+            }
+            return acc;
+        }, []);
+
+        // Lookup user details for each user ID
+        const usersWithDetails = await Promise.all(userIds.map(async (userId) => {
+            const user = await User.findById(userId);
+            return { id: userId, username: user ? user.username : 'Unknown' }; // Assuming username is the user's name field
+        }));
+
+        res.json({ users: usersWithDetails });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 module.exports = router;
