@@ -127,7 +127,7 @@ router.post('/chat/message', async (req, res) => {
   }
 });
 
-router.get('/chat/workers', async (req, res) => {
+router.post('/chat/workers', async (req, res) => {
   try {
     const { userId } = req.body;
 
