@@ -65,8 +65,8 @@ router.post('/login', async (req, res) => {
 router.post('/savelocation', async (req, res) => {
   try {
     console.log("save-location");
-    const { userId, location } = req.body;
-    console.log({ userId, location });
+    const { userId, location, address } = req.body;
+    console.log({ userId, location, address });
     const user = await User.findOne({ username: userId });
     console.log(user)
     if (!user) {
@@ -75,6 +75,8 @@ router.post('/savelocation', async (req, res) => {
 
     // Update the request status to 'assigned'
     user.location = location;
+    user.address = address;
+
     await user.save();
     return res.status(200).json({ message: "saved location" })
   }
@@ -83,6 +85,27 @@ router.post('/savelocation', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 })
+
+router.get('/location/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    console.log(userId)
+    // Find the user by username
+    const user = await User.findById(userId)
+    // If user not found, return 404 error
+    if (!user) {
+      console.log('user not found')
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.log({ location: user.location, address: user.address })
+    // Return user's location
+    return res.status(200).json({ location: user.location , address:user.address});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 router.post('/chat', async (req, res) => {
   try {

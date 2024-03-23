@@ -31,6 +31,7 @@ socketIO.on('connection', (socket) => {
     socket.on("message", async (data) => {
         console.log("message", data)
         const { room_id, newMessage } = data;
+        socket.to(room_id).emit("newMessage",newMessage)
         try {
             // Find the chat room corresponding to the room_id
             let chat = await Chat.findById(room_id);

@@ -166,9 +166,10 @@ router.post('/chat', async (req, res) => {
     }
 });
 
-router.get('/chats/users', async (req, res) => {
+router.post('/chats/users', async (req, res) => {
     try {
         const { workerId } = req.body;
+        console.log("worker", req.body)
 
         // Find all chat rooms associated with the specified worker ID
         const chats = await Chat.find({ workerId });
@@ -186,8 +187,10 @@ router.get('/chats/users', async (req, res) => {
             const user = await User.findById(userId);
             return { id: userId, username: user ? user.username : 'Unknown' }; // Assuming username is the user's name field
         }));
-
-        res.json({ users: usersWithDetails });
+        // Extract user IDs from the requests
+        const users = await User.find({ _id: { $in: userIds } });
+        res.status(200).json({ users });
+        // res.json({ users: usersWithDetails });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
