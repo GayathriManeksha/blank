@@ -185,8 +185,8 @@ router.post('/bid', async (req, res) => {
   try {
     const { workerId, userId } = req.body;
 
-    // Find bid with given workerId, userId, and approval=0
-    const bid = await Bid.findOne({ workerId, userId, approval: 0 });
+    // Find bid with given workerId, userId, and approval=0 or 1
+    const bid = await Bid.findOne({ workerId, userId, approval: { $in: [0, 1] } });
 
     // If bid exists, return it
     if (bid) {
