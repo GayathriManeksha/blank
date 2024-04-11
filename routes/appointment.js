@@ -69,23 +69,11 @@ router.post('/accept-request/:bidId', async (req, res) => {
   }
 });
 
-router.get('/appointments-history/:workerId', async (req, res) => {
+router.get('/history/:workerId', async (req, res) => {
   try {
     const { workerId } = req.params;
-
-    // Find the worker by workerId
-    const worker = await Worker.findById(workerId);
-
-    if (!worker) {
-      return res.status(404).json({ error: 'Worker not found' });
-    }
-
     // Find appointments where the worker is involved, populate only user's username and amount
-    const appointments = await Appointment.find({ worker: worker._id })
-      .populate('user', 'username') // Populate only 'username' from the user field
-      .select('user amount') // Select additional fields from the Appointment model
-      .exec();
-
+    const appointments = await Appointment.find({ worker: workerId })
     res.status(200).json(appointments);
   } catch (error) {
     console.error(error);
