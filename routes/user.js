@@ -4,7 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Chat = require('../models/Chat');
-const Worker = require('../models/worker')
+const Worker = require('../models/worker');
+const Bid = require('../models/bid');
 
 const router = express.Router();
 
@@ -176,6 +177,26 @@ router.post('/chat/workers', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Route to find if there exists a bid with the given workerId and userId and approval=0
+router.post('/bid', async (req, res) => {
+  try {
+    const { workerId, userId } = req.body;
+
+    // Find bid with given workerId, userId, and approval=0
+    const bid = await Bid.findOne({ workerId, userId, approval: 0 });
+
+    // If bid exists, return it
+    if (bid) {
+      return res.json(bid);
+    } else {
+      return res.status(404).json({ message: 'Bid not found with the given parameters.' });
+    }
+  } catch (error) {
+    console.error("Error finding bid:", error);
+    return res.status(500).json({ message: 'Internal server error.' });
   }
 });
 

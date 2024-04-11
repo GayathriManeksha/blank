@@ -6,6 +6,7 @@ const appointmentSchema = new mongoose.Schema({
   worker: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker' },
   date: Date,
   amount: { type: Number, default: 250 }, // Set a default value for amount
+  status: { type: String, enum: ['active', 'progress','completed','cancelled'],default:'active'}
   // Other relevant fields
 });
 

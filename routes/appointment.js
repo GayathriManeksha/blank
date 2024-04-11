@@ -3,6 +3,8 @@ const router = express.Router();
 const Request = require('../models/request');
 const Appointment = require('../models/appointments');
 const Worker = require('../models/worker');
+const Bid=require('../models/bid');
+
 // Route to accept a request and update the appointment and request status
 router.put('/accept-request/:requestId', async (req, res) => {
     try {
@@ -35,6 +37,37 @@ router.put('/accept-request/:requestId', async (req, res) => {
     }
 });
 
+router.post('/accept-request/:bidId', async (req, res) => {
+  try {
+    const bidId = req.params.bidId;
+    const {date} = req.body
+    // Find the bid by ID
+    const bid = await Bid.findById(bidId);
+
+    if (!bid) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    // Update the request status to 'assigned'
+    bid.approval = 1;
+    await bid.save();
+
+    // Create an appointment with the user and worker IDs
+    const appointment = new Appointment({
+      user: bid.userId,
+      worker: bid.workerId,
+      date, 
+      amount:bid.amount,
+      status: 'active', 
+    });
+    await appointment.save();
+
+    res.status(200).json({ message: 'Request accepted and appointment created' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 router.get('/appointments-history/:workerId', async (req, res) => {
   try {

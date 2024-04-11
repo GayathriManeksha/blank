@@ -6,6 +6,7 @@ require('dotenv').config()
 app.use(express.json());
 const cors = require("cors");
 const Chat = require('./models/Chat');
+const Bid=require('./models/bid');
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
@@ -53,6 +54,31 @@ socketIO.on('connection', (socket) => {
             console.error("Error saving message:", error);
         }
     })
+
+    socket.on("accept", async (data) => {
+        console.log("accept", data)
+        const { room_id, BidData } = data; //pass workerId and userId also from frontend through BidData
+        // socket.to(room_id).emit("accepted", BidData)
+        try {
+            console.log("New Bid Created",BidData);
+            
+            let bid = await Bid.findOne({userId:BidData.userId,workerId:BidData.workerId,approval:0});
+            console.log("bid",bid);
+            //if cancelled set approval -1
+            //if request created approval 1
+            // If a bid doesn't exist, create a new one
+            if (!bid) {
+                bid = new Bid(BidData); 
+                await bid.save();
+                console.log("bid", bid);
+                socket.to(room_id).emit("accepted", bid)
+            }
+            socketIO.to(room_id).emit("accepted", bid)
+        } catch (error) {
+            console.error("Error saving message:", error);
+        }
+    })
+
     socket.on('disconnect', () => {
         socket.disconnect()
         console.log('🔥: A user disconnected');
