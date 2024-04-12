@@ -120,8 +120,14 @@ router.post('/chat', async (req, res) => {
       chat = new Chat({ userId, workerId, messages: [] });
       await chat.save();
     }
+    await chat.populate({
+      path: 'workerId',
+      select: 'username',
+    });
 
-    res.json({ chatId: chat._id, messages: chat.messages });
+    // Return the chat ID, messages, and worker's name in the response
+    res.json({ chatId: chat._id, messages: chat.messages, workerName: chat.workerId.username });
+    // res.json({ chatId: chat._id, messages: chat.messages });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
