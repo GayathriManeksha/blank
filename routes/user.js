@@ -200,4 +200,27 @@ router.post('/bid', async (req, res) => {
   }
 });
 
+// Define the API endpoint to send user details
+router.get('/details/:userId', async (req, res) => {
+  try {
+    // Get the user ID from the request parameters
+    const { userId } = req.params;
+
+    // Find the user by ID in the database
+    const user = await User.findById(userId);
+
+    // If the user is not found, return a 404 status code with an error message
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Send the user details in the response
+    res.status(200).json(user);
+  } catch (error) {
+    // If an error occurs, log the error and return a 500 status code with an error message
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 module.exports = router;

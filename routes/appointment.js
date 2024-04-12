@@ -4,6 +4,7 @@ const Request = require('../models/request');
 const Appointment = require('../models/appointments');
 const Worker = require('../models/worker');
 const Bid = require('../models/bid');
+const Chat = require('../models/Chat')
 
 // Route to accept a request and update the appointment and request status
 router.put('/accept-request/:requestId', async (req, res) => {
@@ -64,6 +65,19 @@ router.post('/accept-request/:bidId', async (req, res) => {
     });
     await appointment.save();
 
+    // Delete bid messages from the Chat schema
+    const chat = await Chat.findOne({ userId: bid.userId, workerId: bid.workerId });
+
+    if (chat) {
+      // Filter out bid messages
+      chat.messages = chat.messages.filter(message => {
+        return !(message.contentType === 'bid');
+      });
+
+      // Save the updated chat document
+      await chat.save();
+    }
+
     res.status(200).json({ message: 'Request accepted and appointment created' });
   } catch (error) {
     console.error(error);
@@ -92,7 +106,7 @@ router.get('/worker-history/:workerId', async (req, res) => {
 router.get('/user-history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-
+    console.log({userId})
     // Find appointments where the user is involved, populate the worker details (e.g., username, email, and profession)
     const appointments = await Appointment.find({ user: userId })
       .populate({
