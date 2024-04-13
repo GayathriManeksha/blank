@@ -12,7 +12,7 @@ const workerSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   phone: String,
-  address: String,
+  address:{ type:String,default:""},
   location: {
     latitude: { type: Number, default: null },
     longitude: { type: Number, default: null },
