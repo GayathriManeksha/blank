@@ -239,5 +239,22 @@ router.get('/location/:userId', async (req, res) => {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
+router.get('/workers/:empid', async (req, res) => {
+    const empid = req.params.empid;
+  
+    try {
+      // Find the worker with the provided empid
+      const worker = await Worker.findOne({ empid }, '-password'); // Exclude password field from the response
+  
+      if (!worker) {
+        return res.status(404).json({ message: 'Worker not found' });
+      }
+  
+      res.json(worker);
+    } catch (error) {
+      // If an error occurs, send an error response
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
 module.exports = router;
