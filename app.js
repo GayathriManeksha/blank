@@ -6,7 +6,7 @@ require('dotenv').config()
 app.use(express.json());
 const cors = require("cors");
 const Chat = require('./models/Chat');
-const Bid=require('./models/bid');
+const Bid = require('./models/bid');
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
@@ -26,13 +26,13 @@ socketIO.on('connection', (socket) => {
             text: "Hey"
         };
         // socket.emit("room",newMessage)
-        
+
         // socket.to(roomName).emit("roomMessage", newMessage); //only those clients joined in this room receives this message maybe
     });
     socket.on("message", async (data) => {
         console.log("message", data)
         const { room_id, newMessage } = data;
-        socket.to(room_id).emit("newMessage",newMessage)
+        socket.to(room_id).emit("newMessage", newMessage)
         try {
             // Find the chat room corresponding to the room_id
             let chat = await Chat.findById(room_id);
@@ -60,15 +60,15 @@ socketIO.on('connection', (socket) => {
         const { room_id, BidData } = data; //pass workerId and userId also from frontend through BidData
         // socket.to(room_id).emit("accepted", BidData)
         try {
-            console.log("New Bid Created",BidData);
-            
-            let bid = await Bid.findOne({userId:BidData.userId,workerId:BidData.workerId,approval:0});
-            console.log("bid",bid);
+            console.log("New Bid Created", BidData);
+
+            let bid = await Bid.findOne({ userId: BidData.userId, workerId: BidData.workerId, approval: 0 });
+            console.log("bid", bid);
             //if cancelled set approval -1
             //if request created approval 1
             // If a bid doesn't exist, create a new one
             if (!bid) {
-                bid = new Bid(BidData); 
+                bid = new Bid(BidData);
                 await bid.save();
                 console.log("bid", bid);
                 socket.to(room_id).emit("accepted", bid)
@@ -94,6 +94,8 @@ const AuthRouter = require('./routes/user');
 const WorkRouter = require('./routes/emp');
 const AppointmentRouter = require('./routes/appointment');
 const RequestRouter = require('./routes/request');
+const FeedbackRouter = require('./routes/feedback');
+
 
 
 // Middleware to verify JWT token
@@ -119,6 +121,7 @@ app.use("/user", AuthRouter);
 app.use("/emp", WorkRouter);
 app.use("/request", RequestRouter);
 app.use("/appointment", AppointmentRouter);
+app.use("/feedback", FeedbackRouter);
 
 
 console.log(process.env.url)
