@@ -138,7 +138,7 @@ router.post('/savelocation', async (req, res) => {
 
         // Update the request status to 'assigned'
         user.location = location;
-        user.address=address;
+        user.address = address;
         await user.save();
         return res.status(200).json({ message: "saved location" })
     }
@@ -203,9 +203,9 @@ router.post('/chats/users', async (req, res) => {
 router.post('/bid', async (req, res) => {
     try {
         const { workerId, userId } = req.body;
-        console.log({workerId,userId})
+        console.log({ workerId, userId })
         // Find bid with given workerId, userId, and approval=0
-        const bid = await Bid.findOne({ workerId, userId, approval: { $in: [0, 1] }});
+        const bid = await Bid.findOne({ workerId, userId, approval: { $in: [0, 1] } });
         console.log(bid)
         // If bid exists, return it
         if (bid) {
@@ -241,20 +241,20 @@ router.get('/location/:userId', async (req, res) => {
 });
 router.get('/workers/:empid', async (req, res) => {
     const empid = req.params.empid;
-  
+
     try {
-      // Find the worker with the provided empid
-      const worker = await Worker.findOne({ empid }, '-password'); // Exclude password field from the response
-  
-      if (!worker) {
-        return res.status(404).json({ message: 'Worker not found' });
-      }
-  
-      res.json(worker);
+        // Find the worker with the provided empid
+        const worker = await Worker.findOne({ _id: empid }, '-password'); // Exclude password field from the response
+
+        if (!worker) {
+            return res.status(404).json({ message: 'Worker not found' });
+        }
+
+        res.json(worker);
     } catch (error) {
-      // If an error occurs, send an error response
-      res.status(500).json({ message: error.message });
+        // If an error occurs, send an error response
+        res.status(500).json({ message: error.message });
     }
-  });
-  
+});
+
 module.exports = router;
