@@ -121,13 +121,13 @@ router.get('/user-history/:userId', async (req, res) => {
   }
 });
 
-router.put('/progress/:workerId', async (req, res) => {
-  const { workerId } = req.params;
+router.put('/progress/:appointmentId', async (req, res) => {
+  const { appointmentId } = req.params;
 
   try {
     // Find and update one appointment where worker ID matches and status is 'active'
     const result = await Appointment.updateOne(
-      { worker: workerId, status: 'active' },
+      { _id:appointmentId, status: 'active' },
       { $set: { status: 'progress' } }
     );
 
@@ -141,13 +141,12 @@ router.put('/progress/:workerId', async (req, res) => {
   }
 });
 
-router.put('/completed/:userId', async (req, res) => {
-  const { userId } = req.params;
-
+router.put('/completed/:appointmentId', async (req, res) => {
+  const {appointmentId } = req.params;
   try {
     // Find and update one appointment where user ID matches and status is 'progress'
     const result = await Appointment.updateOne(
-      { user: userId, status: 'progress' },
+      { _id: appointmentId, status: 'progress' },
       { $set: { status: 'completed' } }
     );
 
@@ -161,40 +160,22 @@ router.put('/completed/:userId', async (req, res) => {
   }
 });
 
-router.put('/appointment/paid/:workerId', async (req, res) => {
-  const { workerId } = req.params;
-
+router.put('/paid/:appointmentId', async (req, res) => {
+  const { appointmentId } = req.params;
   try {
     // Find and update one appointment where worker ID matches and status is 'completed'
     const appointment = await Appointment.findOne(
-      { worker: workerId, status: 'completed' }
+      {_id:appointmentId, status: 'completed' }
     );
 
     // Check if an appointment was found
     if (appointment) {
-      const appointmentUpdateResult = await Appointment.updateOne(
-        { worker: workerId, status: 'completed' },
-        { $set: { status: 'paid' } }
+      appointment.status='paid'
+      const bidUpdateResult = await Bid.updateOne(
+        { workerId:appointment.worker, userId:appointment.user, approval: 1 },
+        { $set: { approval: -1 } }
       );
-
-      // If the appointment status was successfully updated
-      if (appointmentUpdateResult.modifiedCount > 0) {
-        const userId = appointment.user; // Get userId from the appointment
-
-        // Update bid where workerId matches and approval is >= 0, and userId matches the appointment's userId
-        const bidUpdateResult = await Bid.updateOne(
-          { workerId, userId, approval: 1 },
-          { $set: { approval: -1 } }
-        );
-
-        // Return success response
-        res.status(200).json({
-          message: 'Appointment status updated to paid and bid approval value set to -1',
-          bidUpdateCount: bidUpdateResult.modifiedCount, // Optional: Include the count of bids updated
-        });
-      } else {
-        res.status(404).json({ message: 'No appointments found in completed status for the given workerId' });
-      }
+     appointment.save()
     } else {
       res.status(404).json({ message: 'No appointments found in completed status for the given workerId' });
     }
