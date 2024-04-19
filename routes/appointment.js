@@ -121,4 +121,122 @@ router.get('/user-history/:userId', async (req, res) => {
   }
 });
 
+router.put('/progress/:workerId', async (req, res) => {
+  const { workerId } = req.params;
+
+  try {
+    // Find and update one appointment where worker ID matches and status is 'active'
+    const result = await Appointment.updateOne(
+      { worker: workerId, status: 'active' },
+      { $set: { status: 'progress' } }
+    );
+
+    if (result.modifiedCount > 0) {
+      res.status(200).json({ message: 'Appointment status updated to progress' });
+    } else {
+      res.status(404).json({ message: 'No appointments found in active status for the given workerId' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.put('/completed/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Find and update one appointment where user ID matches and status is 'progress'
+    const result = await Appointment.updateOne(
+      { user: userId, status: 'progress' },
+      { $set: { status: 'completed' } }
+    );
+
+    if (result.modifiedCount > 0) {
+      res.status(200).json({ message: 'Appointment status updated to completed' });
+    } else {
+      res.status(404).json({ message: 'No appointments found in progress status for the given userId' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.put('/appointment/paid/:workerId', async (req, res) => {
+  const { workerId } = req.params;
+
+  try {
+    // Find and update one appointment where worker ID matches and status is 'completed'
+    const appointment = await Appointment.findOne(
+      { worker: workerId, status: 'completed' }
+    );
+
+    // Check if an appointment was found
+    if (appointment) {
+      const appointmentUpdateResult = await Appointment.updateOne(
+        { worker: workerId, status: 'completed' },
+        { $set: { status: 'paid' } }
+      );
+
+      // If the appointment status was successfully updated
+      if (appointmentUpdateResult.modifiedCount > 0) {
+        const userId = appointment.user; // Get userId from the appointment
+
+        // Update bid where workerId matches and approval is >= 0, and userId matches the appointment's userId
+        const bidUpdateResult = await Bid.updateOne(
+          { workerId, userId, approval:1 },
+          { $set: { approval: -1 } }
+        );
+
+        // Return success response
+        res.status(200).json({
+          message: 'Appointment status updated to paid and bid approval value set to -1',
+          bidUpdateCount: bidUpdateResult.modifiedCount, // Optional: Include the count of bids updated
+        });
+      } else {
+        res.status(404).json({ message: 'No appointments found in completed status for the given workerId' });
+      }
+    } else {
+      res.status(404).json({ message: 'No appointments found in completed status for the given workerId' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.get('/active-worker-history/:workerId', async (req, res) => {
+  try {
+    const { workerId } = req.params;
+
+    // Find appointments where the worker is involved, populate the user details (e.g., username and email)
+    const appointments = await Appointment.find({ worker: workerId, status: { $ne: 'paid' } })
+      .populate({
+        path: 'user',
+        select: 'username email', // Include only the user's username and email
+      });
+
+    res.status(200).json(appointments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/active-user-history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log({ userId })
+    // Find appointments where the user is involved, populate the worker details (e.g., username, email, and profession)
+    const appointments = await Appointment.find({ user: userId, status: { $ne: 'paid' } })
+      .populate({
+        path: 'worker',
+        select: 'username email profession', // Include the worker's username, email, and profession
+      });
+
+    res.status(200).json(appointments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 module.exports = router;
