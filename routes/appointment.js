@@ -106,7 +106,7 @@ router.get('/worker-history/:workerId', async (req, res) => {
 router.get('/user-history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    console.log({userId})
+    console.log({ userId })
     // Find appointments where the user is involved, populate the worker details (e.g., username, email, and profession)
     const appointments = await Appointment.find({ user: userId })
       .populate({
@@ -183,7 +183,7 @@ router.put('/appointment/paid/:workerId', async (req, res) => {
 
         // Update bid where workerId matches and approval is >= 0, and userId matches the appointment's userId
         const bidUpdateResult = await Bid.updateOne(
-          { workerId, userId, approval:1 },
+          { workerId, userId, approval: 1 },
           { $set: { approval: -1 } }
         );
 
@@ -233,6 +233,27 @@ router.get('/active-user-history/:userId', async (req, res) => {
       });
 
     res.status(200).json(appointments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/status/:appointmentId', async (req, res) => {
+  const { appointmentId } = req.params;
+
+  try {
+    // Find the appointment with the given ID
+    const appointment = await Appointment.findById(appointmentId);
+
+    // Check if the appointment exists
+    if (appointment) {
+      // Return the current status of the appointment
+      res.status(200).json({ status: appointment.status });
+    } else {
+      // If no appointment is found, return an error message
+      res.status(404).json({ message: 'Appointment not found' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
