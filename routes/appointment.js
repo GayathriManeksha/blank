@@ -239,7 +239,7 @@ router.get('/active-user-history/:userId', async (req, res) => {
   }
 });
 
-app.get('/status/:appointmentId', async (req, res) => {
+router.get('/status/:appointmentId', async (req, res) => {
   const { appointmentId } = req.params;
 
   try {
