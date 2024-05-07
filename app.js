@@ -29,13 +29,59 @@ socketIO.on('connection', (socket) => {
 
         // socket.to(roomName).emit("roomMessage", newMessage); //only those clients joined in this room receives this message maybe
     });
+    socket.on("user_online", async (room_id) => {
+        console.log("----------------------User Online----------------------")
+        try {
+            // Update chat document to indicate that the user is online
+            await Chat.findByIdAndUpdate(room_id, { userOnline: true });
+
+            console.log("User marked as online in chat:", room_id);
+        } catch (error) {
+            console.error("Error updating chat document:", error);
+        }
+    })
+    socket.on("user_offline", async (room_id) => {
+        console.log("------------------User Offline--------------------",room_id)
+        try {
+            // Update chat document to indicate that the user is online
+            await Chat.findByIdAndUpdate(room_id, { userOnline: false });
+
+            console.log("User marked as offline in chat:", room_id);
+        } catch (error) {
+            console.error("Error updating chat document:", error);
+        }
+    })
+
+    socket.on("worker_online", async (room_id) => {
+        console.log("----------------------WorkerOnline----------------------")
+        try {
+            // Update chat document to indicate that the user is online
+            await Chat.findByIdAndUpdate(room_id, { workerOnline: true });
+
+            console.log("worker marked as online in chat:", room_id);
+        } catch (error) {
+            console.error("Error updating chat document:", error);
+        }
+    })
+    socket.on("worker_offline", async (room_id) => {
+        console.log("------------------WOrker Offline--------------------", room_id)
+        try {
+            // Update chat document to indicate that the user is online
+            await Chat.findByIdAndUpdate(room_id, { workerOnline: false });
+
+            console.log("worker marked as offline in chat:", room_id);
+        } catch (error) {
+            console.error("Error updating chat document:", error);
+        }
+    })
+
     socket.on("message", async (data) => {
         console.log("message", data)
         const { room_id, newMessage } = data;
         socket.to(room_id).emit("newMessage", newMessage)
         try {
             // Find the chat room corresponding to the room_id
-            let chat = await Chat.findById(room_id);
+            let chat = await Chat.findById(room_id).populate('userId').populate('workerId');
 
             // If the chat room doesn't exist, you may handle this case based on your application logic.
             if (!chat) {
@@ -50,6 +96,37 @@ socketIO.on('connection', (socket) => {
             await chat.save();
 
             console.log("Message saved in chat room:", newMessage);
+
+            const message = {
+                title: 'New Message',
+                body: newMessage.content.text,
+                data: { testData: 'test data' },
+            };
+
+            if (newMessage.sender.role === 'worker') {
+
+                const user = chat.userId;
+                console.log(user)
+                // Check if the user exists and has an Expo token
+                if (user && user.token && !chat.userOnline) {
+                    // Send push notification using the Expo token
+                    sendPushNotification(user.token, message);
+                } else {
+                    console.log("User not found or Expo token not available or user online");
+                }
+            }
+            if (newMessage.sender.role === 'user') {
+
+                const user = chat.workerId;
+                // Check if the user exists and has an Expo token
+                if (user && user.token && !chat.workerOnline) {
+                    // Send push notification using the Expo token
+                    sendPushNotification(user.token, message);
+                } else {
+                    console.log("Worker not found or Expo token not available or online");
+                }
+            }
+
         } catch (error) {
             console.error("Error saving message:", error);
         }
@@ -95,8 +172,37 @@ const WorkRouter = require('./routes/emp');
 const AppointmentRouter = require('./routes/appointment');
 const RequestRouter = require('./routes/request');
 const FeedbackRouter = require('./routes/feedback');
+const NotificationRouter = require('./routes/notification');
 
+async function sendPushNotification(expoPushToken, message) {
+    const m = {
+        to: expoPushToken,
+        sound: 'default',
+        title: message.title || 'Test title',
+        body: message.body || 'Test body',
+        data: message.data || {},
+    };
+    console.log(m)
+    try {
+        const response = await fetch('https://api.expo.dev/v2/push/send', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Accept-encoding': 'gzip, deflate',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(m),
+        });
 
+        if (response.ok) {
+            console.log('Notification sent successfully');
+        } else {
+            console.error('Failed to send notification:', response);
+        }
+    } catch (error) {
+        console.error('Error sending notification:', error.message);
+    }
+}
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
@@ -122,6 +228,7 @@ app.use("/emp", WorkRouter);
 app.use("/request", RequestRouter);
 app.use("/appointment", AppointmentRouter);
 app.use("/feedback", FeedbackRouter);
+app.use("/notification", NotificationRouter);
 
 
 console.log(process.env.url)

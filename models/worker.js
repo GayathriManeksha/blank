@@ -18,6 +18,7 @@ const workerSchema = new mongoose.Schema({
     longitude: { type: Number, default: null },
   },
   profession: String,
+  token: { type: String, default: null }
   // Other relevant fields
 });
 

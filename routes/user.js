@@ -101,7 +101,7 @@ router.get('/location/:userId', async (req, res) => {
     }
     console.log({ location: user.location, address: user.address })
     // Return user's location
-    return res.status(200).json({ location: user.location , address:user.address});
+    return res.status(200).json({ location: user.location, address: user.address });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -126,7 +126,7 @@ router.post('/chat', async (req, res) => {
     });
 
     // Return the chat ID, messages, and worker's name in the response
-    res.json({ chatId: chat._id, messages: chat.messages, workerName: chat.workerId.username });
+    res.json({ chatId: chat._id, messages: chat.messages, workerName: chat.workerId.username,online:chat.workerOnline });
     // res.json({ chatId: chat._id, messages: chat.messages });
   } catch (error) {
     console.error(error);
@@ -229,4 +229,29 @@ router.get('/details/:userId', async (req, res) => {
   }
 });
 
+router.post('/savetoken', async (req, res) => {
+  try {
+    console.log("save-token");
+    const { userId, token } = req.body;
+    console.log({ userId, token });
+    const user = await User.findOne({ _id: userId });
+    console.log(user)
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.token = token
+
+    await user.save();
+    return res.status(200).json({ message: "saved location" })
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
+router.get('/notification_to_worker/:userId', async (req, res) => {
+  
+});
 module.exports = router;

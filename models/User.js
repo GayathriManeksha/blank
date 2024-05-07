@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
     latitude: { type: Number, default: null },
     longitude: { type: Number, default: null },
   },
-  address:{type:String,default:""}
+  address: { type: String, default: "" },
+  token: { type: String, default: null }
   // Other relevant fields
 });
 

@@ -161,7 +161,7 @@ router.post('/chat', async (req, res) => {
             await chat.save();
         }
 
-        res.json({ chatId: chat._id, messages: chat.messages });
+        res.json({ chatId: chat._id, messages: chat.messages ,online:chat.userOnline});
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
@@ -184,11 +184,6 @@ router.post('/chats/users', async (req, res) => {
             return acc;
         }, []);
 
-        // Lookup user details for each user ID
-        const usersWithDetails = await Promise.all(userIds.map(async (userId) => {
-            const user = await User.findById(userId);
-            return { id: userId, username: user ? user.username : 'Unknown' }; // Assuming username is the user's name field
-        }));
         // Extract user IDs from the requests
         const users = await User.find({ _id: { $in: userIds } });
         res.status(200).json({ users });
@@ -257,4 +252,29 @@ router.get('/workers/:empid', async (req, res) => {
     }
 });
 
+router.post('/savetoken', async (req, res) => {
+    try {
+        console.log("save-token");
+        const { workerId, token } = req.body;
+        console.log({ workerId, token });
+
+        const user = await Worker.findById(workerId);
+        console.log(user)
+        if (!user) {
+            return res.status(404).json({ error: 'Worker not found' });
+        }
+
+        user.token=token
+        await user.save();
+        return res.status(200).json({ message: "saved location" })
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
+
+router.get('/token_to_user/:userId', async (req, res) => {
+    
+});
 module.exports = router;

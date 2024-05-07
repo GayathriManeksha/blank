@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-    id:String,
+    id: String,
     sender: {
         role: { type: String, enum: ['user', 'worker'], required: true }
     },
@@ -17,7 +17,9 @@ const messageSchema = new mongoose.Schema({
 const chatSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the user making the request
     workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker' }, // Reference to the assigned worker
-    messages: [messageSchema]
+    messages: [messageSchema],
+    userOnline: { type: Boolean, default: false },
+    workerOnline: { type: Boolean, default: false }
 });
 
 const Chat = mongoose.model('Chat', chatSchema);

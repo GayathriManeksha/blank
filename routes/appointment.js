@@ -153,7 +153,7 @@ router.put('/completed/:appointmentId', async (req, res) => {
     if (result.modifiedCount > 0) {
       res.status(200).json({ message: 'Appointment status updated to completed' });
     } else {
-      res.status(404).json({ message: 'No appointments found in progress status for the given userId' });
+      res.status(404).json({ message: 'No appointments found in progress status' });
     }
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
